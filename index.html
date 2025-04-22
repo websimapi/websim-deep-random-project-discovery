@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deep Random Project Search</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 2rem;
+      font-size: 2.2rem;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+    .container {
+      background-color: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    .algo-description {
+      background-color: #f1f7fe;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 5px solid #3498db;
+    }
+    .btn-primary {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-primary:hover {
+      background-color: #2980b9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+    .btn-primary svg {
+      margin-right: 8px;
+    }
+    .result-container {
+      margin-top: 25px;
+      padding: 20px;
+      border-radius: 8px;
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      display: none;
+    }
+    .result-container.visible {
+      display: block;
+      animation: fadeIn 0.5s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .code-container {
+      margin-top: 30px;
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+      background-color: #282c34;
+      color: #abb2bf;
+    }
+    pre {
+      margin: 0;
+      padding: 20px;
+      white-space: pre-wrap;
+      font-family: 'Fira Code', 'Consolas', monospace;
+      font-size: 14px;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: rgba(255,255,255,0.1);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      backdrop-filter: blur(4px);
+    }
+    .copy-btn:hover {
+      background-color: rgba(255,255,255,0.2);
+    }
+    .copy-btn svg {
+      width: 14px;
+      height: 14px;
+      margin-right: 5px;
+    }
+    .path-visual {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 20px 0;
+      position: relative;
+    }
+    .path-node {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background-color: #3498db;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      position: relative;
+      z-index: 2;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .path-line {
+      position: absolute;
+      height: 3px;
+      background-color: #bdc3c7;
+      width: 100%;
+      top: 50%;
+      z-index: 1;
+    }
+    .loader {
+      display: none;
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(52, 152, 219, 0.3);
+      border-radius: 50%;
+      border-top-color: #3498db;
+      margin: 20px auto;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .highlight {
+      color: #61afef;
+    }
+    .comment {
+      color: #98c379;
+    }
+    .stat-card {
+      display: flex;
+      align-items: center;
+      background-color: #f8f9fa;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      border-left: 4px solid #3498db;
+    }
+    .stat-card svg {
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+      color: #3498db;
+    }
+    .project-preview {
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+      background-color: white;
+    }
+    .project-preview h4 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: #2c3e50;
+    }
+    .project-link {
+      display: inline-block;
+      margin-top: 10px;
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .project-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>Deep Random Project Discovery</h1>
+  
+  <div class="container">
+    <div class="algo-description">
+      <h3>📊 Optimized Deep Search Algorithm</h3>
+      <p>This algorithm performs a depth-first traversal of the social graph to find truly random projects. It leverages metadata and social connections to escape filter bubbles and discover unique content.</p>
+      
+      <div class="path-visual">
+        <div class="path-line"></div>
+        <div class="path-node">Start</div>
+        <div class="path-node">User</div>
+        <div class="path-node">Network</div>
+        <div class="path-node">Result</div>
+      </div>
+    </div>
+    
+    <button id="searchBtn" class="btn-primary">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Discover Random Project
+    </button>
+    
+    <div id="loader" class="loader"></div>
+    
+    <div id="resultContainer" class="result-container">
+      <h3>🎯 Random Project Discovered!</h3>
+      
+      <div class="project-preview">
+        <h4 id="projectTitle">Project Title</h4>
+        <div class="stat-card">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Created by: <span id="creatorName" class="highlight">username</span>
+        </div>
+        
+        <a id="projectLink" href="#" target="_blank" class="project-link">View Project</a>
+      </div>
+      
+      <h4>🔍 Search Metadata:</h4>
+      <div class="stat-card">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 8V16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Started from: <span id="initialProject" class="highlight">Project Name</span> by <span id="initialCreator" class="highlight">Creator</span>
+      </div>
+      <div class="stat-card">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Connection type: <span id="connectionType" class="highlight">followers/following</span>
+      </div>
+      <div class="stat-card">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Search depth: <span id="searchDepth" class="highlight">1</span>
+      </div>
+    </div>
+    
+    <div class="code-container">
+      <button id="copyBtn" class="copy-btn">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 4H17C18.1046 4 19 4.89543 19 6V14C19 15.1046 18.1046 16 17 16H8C6.89543 16 6 15.1046 6 14V6C6 4.89543 6.89543 4 8 4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 16V18C16 19.1046 15.1046 20 14 20H5C3.89543 20 3 19.1046 3 18V10C3 8.89543 3.89543 8 5 8H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Copy Function
+      </button>
+      <pre id="codeBlock"><span class="comment">/**
+ * Deep Random Project Search - Optimized algorithm that traverses the social graph
+ * to find a truly random project by exploring connections between users.
+ * 
+ * @returns {Promise<Object>} Object containing the random project URL and metadata
+ */</span>
+async function deepRandomProjectSearch() {
+  try {
+    <span class="comment">// Step 1: Get trending projects to start with a diverse seed</span>
+    const trendingResponse = await fetch('/api/v1/feed/trending');
+    if (!trendingResponse.ok) throw new Error('Failed to fetch trending projects');
+    const trendingData = await trendingResponse.json();
+    
+    <span class="comment">// Get a random project from trending projects</span>
+    const projects = trendingData.feed.data;
+    if (!projects.length) throw new Error('No trending projects found');
+    
+    const randomProject = projects[Math.floor(Math.random() * projects.length)];
+    const projectCreator = randomProject.project.created_by;
+    
+    console.log(`Initial random project: ${randomProject.project.title} by ${projectCreator.username}`);
+    
+    <span class="comment">// Step 2: Get either followers or following of the project creator (randomly choose)</span>
+    const socialDirection = Math.random() > 0.5 ? 'followers' : 'following';
+    const socialUrl = `/api/v1/users/${projectCreator.username}/${socialDirection}`;
+    
+    const socialResponse = await fetch(socialUrl);
+    if (!socialResponse.ok) throw new Error(`Failed to fetch ${socialDirection}`);
+    const socialData = await socialResponse.json();
+    
+    const connections = socialData[socialDirection].data;
+    if (!connections.length) throw new Error(`No ${socialDirection} found`);
+    
+    <span class="comment">// Step 3: Select a random user from connections</span>
+    const randomConnection = connections[Math.floor(Math.random() * connections.length)];
+    const randomUser = randomConnection.follow.user;
+    
+    console.log(`Random ${socialDirection.slice(0, -1)}: ${randomUser.username}`);
+    
+    <span class="comment">// Step 4: Get projects from the random user</span>
+    const userProjectsUrl = `/api/v1/users/${randomUser.username}/projects`;
+    const userProjectsResponse = await fetch(userProjectsUrl);
+    if (!userProjectsResponse.ok) throw new Error('Failed to fetch user projects');
+    const userProjectsData = await userProjectsResponse.json();
+    
+    const userProjects = userProjectsData.projects.data;
+    if (!userProjects.length) throw new Error('No projects found for the random user');
+    
+    <span class="comment">// Step 5: Select a random project from the random user</span>
+    const finalRandomProject = userProjects[Math.floor(Math.random() * userProjects.length)];
+    
+    <span class="comment">// Step 6: Return the URL of the final random project with metadata</span>
+    const projectUrl = `https://websim.ai/p/${finalRandomProject.project.id}`;
+    console.log(`Found deep random project: ${finalRandomProject.project.title}`);
+    
+    return {
+      url: projectUrl,
+      title: finalRandomProject.project.title,
+      creator: randomUser.username,
+      metadata: {
+        initialProject: randomProject.project.title,
+        initialCreator: projectCreator.username,
+        socialDirection: socialDirection,
+        depth: 1
+      }
+    };
+  } catch (error) {
+    console.error('Error in deep random project search:', error);
+    throw error;
+  }
+}</pre>
+    </div>
+  </div>
+
+  <script>
+    // Deep Random Project Search function implementation
+    async function deepRandomProjectSearch() {
+      try {
+        // Step 1: Get trending projects to start with a diverse seed
+        const trendingResponse = await fetch('/api/v1/feed/trending');
+        if (!trendingResponse.ok) throw new Error('Failed to fetch trending projects');
+        const trendingData = await trendingResponse.json();
+        
+        // Get a random project from trending projects
+        const projects = trendingData.feed.data;
+        if (!projects.length) throw new Error('No trending projects found');
+        
+        const randomProject = projects[Math.floor(Math.random() * projects.length)];
+        const projectCreator = randomProject.project.created_by;
+        
+        console.log(`Initial random project: ${randomProject.project.title} by ${projectCreator.username}`);
+        
+        // Step 2: Get either followers or following of the project creator (randomly choose)
+        const socialDirection = Math.random() > 0.5 ? 'followers' : 'following';
+        const socialUrl = `/api/v1/users/${projectCreator.username}/${socialDirection}`;
+        
+        const socialResponse = await fetch(socialUrl);
+        if (!socialResponse.ok) throw new Error(`Failed to fetch ${socialDirection}`);
+        const socialData = await socialResponse.json();
+        
+        const connections = socialData[socialDirection].data;
+        if (!connections.length) throw new Error(`No ${socialDirection} found`);
+        
+        // Step 3: Select a random user from connections
+        const randomConnection = connections[Math.floor(Math.random() * connections.length)];
+        const randomUser = randomConnection.follow.user;
+        
+        console.log(`Random ${socialDirection.slice(0, -1)}: ${randomUser.username}`);
+        
+        // Step 4: Get projects from the random user
+        const userProjectsUrl = `/api/v1/users/${randomUser.username}/projects`;
+        const userProjectsResponse = await fetch(userProjectsUrl);
+        if (!userProjectsResponse.ok) throw new Error('Failed to fetch user projects');
+        const userProjectsData = await userProjectsResponse.json();
+        
+        const userProjects = userProjectsData.projects.data;
+        if (!userProjects.length) throw new Error('No projects found for the random user');
+        
+        // Step 5: Select a random project from the random user
+        const finalRandomProject = userProjects[Math.floor(Math.random() * userProjects.length)];
+        
+        // Step 6: Return the URL of the final random project with metadata
+        const projectUrl = `https://websim.ai/p/${finalRandomProject.project.id}`;
+        console.log(`Found deep random project: ${finalRandomProject.project.title}`);
+        
+        return {
+          url: projectUrl,
+          title: finalRandomProject.project.title,
+          creator: randomUser.username,
+          metadata: {
+            initialProject: randomProject.project.title,
+            initialCreator: projectCreator.username,
+            socialDirection: socialDirection,
+            depth: 1
+          }
+        };
+      } catch (error) {
+        console.error('Error in deep random project search:', error);
+        throw error;
+      }
+    }
+    
+    // UI Functionality
+    document.getElementById('searchBtn').addEventListener('click', async () => {
+      const loader = document.getElementById('loader');
+      const resultContainer = document.getElementById('resultContainer');
+      const searchBtn = document.getElementById('searchBtn');
+      
+      // Reset and show loader
+      resultContainer.classList.remove('visible');
+      loader.style.display = 'block';
+      searchBtn.disabled = true;
+      searchBtn.style.opacity = '0.7';
+      
+      try {
+        const result = await deepRandomProjectSearch();
+        
+        // Update UI with result
+        document.getElementById('projectTitle').textContent = result.title;
+        document.getElementById('creatorName').textContent = result.creator;
+        document.getElementById('projectLink').textContent = 'Visit ' + result.title;
+        document.getElementById('projectLink').href = result.url;
+        
+        // Update metadata
+        document.getElementById('initialProject').textContent = result.metadata.initialProject;
+        document.getElementById('initialCreator').textContent = result.metadata.initialCreator;
+        document.getElementById('connectionType').textContent = result.metadata.socialDirection;
+        document.getElementById('searchDepth').textContent = result.metadata.depth;
+        
+        // Show result
+        resultContainer.classList.add('visible');
+      } catch (error) {
+        alert(`Error finding random project: ${error.message}`);
+      } finally {
+        loader.style.display = 'none';
+        searchBtn.disabled = false;
+        searchBtn.style.opacity = '1';
+      }
+    });
+    
+    // Copy to clipboard functionality
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const codeText = document.getElementById('codeBlock').textContent;
+      navigator.clipboard.writeText(codeText)
+        .then(() => {
+          const copyBtn = document.getElementById('copyBtn');
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => {
+            copyBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 4H17C18.1046 4 19 4.89543 19 6V14C19 15.1046 18.1046 16 17 16H8C6.89543 16 6 15.1046 6 14V6C6 4.89543 6.89543 4 8 4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M16 16V18C16 19.1046 15.1046 20 14 20H5C3.89543 20 3 19.1046 3 18V10C3 8.89543 3.89543 8 5 8H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>Copy Function`;
+          }, 2000);
+        })
+        .catch(err => {
+          console.error('Failed to copy: ', err);
+          alert('Failed to copy to clipboard');
+        });
+    });
+  </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
+
